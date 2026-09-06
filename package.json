@@ -1,0 +1,12 @@
+{
+  "name": "neurosathi-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NeuroSathi - Cognitive Gaming for Elderly People with AI Companion",
+  "scripts": {
+    "start": "start-all.bat",
+    "dev:backend": "cd backend && node server.js",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install"
+  }
+}

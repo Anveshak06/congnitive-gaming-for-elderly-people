@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
@@ -8,7 +10,10 @@ import {
   Lightbulb,
   MessageCircle,
   Zap,
+  BarChart3,
+  Sparkles,
 } from "lucide-react";
+import { sounds } from "../utils/audio";
 
 interface Game {
   name: string;
@@ -27,157 +32,132 @@ interface Category {
 const categories: Category[] = [
   {
     name: "Memory",
-    description:
-      "Practice remembering objects, sequences and information.",
+    description: "Practice remembering objects, cards, and sequences.",
     icon: <Brain size={30} />,
     games: [
       {
         name: "Card Matching",
-        description: "Find and match pairs of cards.",
+        description: "Flip and match pairs of colorful cards.",
         icon: "🃏",
         route: "/games/card-matching",
       },
       {
         name: "Remember the Sequence",
-        description:
-          "Remember numbers, shapes and symbols in order.",
+        description: "Follow and repeat the flashing tile sequence.",
         icon: "🔢",
         route: "/games/remember-sequence",
       },
     ],
   },
-
   {
     name: "Number Skills",
-    description:
-      "Practice numbers, sequences and simple problem solving.",
+    description: "Practice numbers, sequences, and gentle problem solving.",
     icon: <Calculator size={30} />,
     games: [
       {
         name: "Number Sequence",
-        description: "Find the missing number in a sequence.",
-        icon: "🔢",
+        description: "Find the missing number in arithmetic patterns.",
+        icon: "➕",
         route: "/games/number-sequence",
       },
       {
         name: "Simple Sudoku",
-        description:
-          "Complete a beginner-friendly Sudoku puzzle.",
+        description: "Complete a gentle 4x4 beginner Sudoku grid.",
         icon: "🧩",
         route: "/games/simple-sudoku",
       },
     ],
   },
-
   {
     name: "Pattern Recognition",
-    description:
-      "Identify patterns and find differences.",
+    description: "Identify order, color sequences, and subtle differences.",
     icon: <Lightbulb size={30} />,
     games: [
       {
         name: "Complete the Pattern",
-        description:
-          "Find what comes next in a pattern.",
+        description: "Find what symbol comes next in sequence.",
         icon: "🔵",
         route: "/games/complete-pattern",
       },
       {
         name: "Odd One Out",
-        description:
-          "Find the object that is different.",
+        description: "Spot the object that looks different.",
         icon: "🔺",
         route: "/games/odd-one-out",
       },
     ],
   },
-
   {
-    name: "Attention",
-    description:
-      "Practice focus through simple visual activities.",
+    name: "Attention & Focus",
+    description: "Practice concentration and scanning through visual scenes.",
     icon: <Focus size={30} />,
     games: [
       {
         name: "Find the Object",
-        description:
-          "Find a specific object in a simple scene.",
+        description: "Locate a specific target item hidden in the grid.",
         icon: "🔎",
         route: "/games/find-object",
       },
       {
         name: "Target Search",
-        description:
-          "Find and tap all the target symbols.",
+        description: "Count and collect all target symbols.",
         icon: "🎯",
         route: "/games/target-search",
       },
     ],
   },
-
   {
     name: "Word Skills",
-    description:
-      "Practice remembering and completing familiar words.",
+    description: "Practice recalling and completing familiar words.",
     icon: <MessageCircle size={30} />,
     games: [
       {
         name: "Word Recall",
-        description:
-          "Remember words you saw earlier.",
+        description: "Memorize words and identify which were shown.",
         icon: "🗣️",
         route: "/games/word-recall",
       },
       {
         name: "Complete the Word",
-        description:
-          "Choose the missing letter to complete a word.",
+        description: "Pick the missing letter to complete familiar words.",
         icon: "✏️",
         route: "/games/complete-word",
       },
     ],
   },
-
   {
     name: "Image Recall",
-    description:
-      "Practice remembering pictures and visual information.",
+    description: "Practice remembering pictures and visual details.",
     icon: <Image size={30} />,
     games: [
       {
         name: "Picture Memory",
-        description:
-          "Remember familiar pictures.",
+        description: "Remember pictures and recall which was displayed.",
         icon: "🖼️",
         route: "/games/picture-memory",
       },
       {
         name: "What Was Missing?",
-        description:
-          "Remember which picture disappeared.",
+        description: "Spot which picture vanished from the group.",
         icon: "👀",
         route: "/games/what-was-missing",
       },
     ],
   },
-
   {
-    name: "Reaction",
-    description:
-      "Practice simple reaction and response activities.",
+    name: "Gentle Reaction",
+    description: "Practice hand-eye coordination at a comfortable pace.",
     icon: <Zap size={30} />,
     games: [
       {
         name: "Tap the Target",
-        description:
-          "Tap the target when it appears.",
-        icon: "🎯",
+        description: "Tap the star target gently as it appears.",
+        icon: "⏱️",
         route: "/games/tap-the-target",
       },
       {
         name: "Quick Response",
-        description:
-          "Respond to simple instructions.",
+        description: "Follow the friendly instructions promptly.",
         icon: "⚡",
         route: "/games/quick-response",
       },
@@ -185,241 +165,239 @@ const categories: Category[] = [
   },
 ];
 
-function GamesPage() {
+interface GamesPageProps {
+  onOpenProgress?: () => void;
+  onOpenDaily?: () => void;
+}
+
+export default function GamesPage({ onOpenProgress, onOpenDaily }: GamesPageProps) {
+  const navigate = useNavigate();
+  const [selectedFilter, setSelectedFilter] = useState<string>("All");
+
+  const filterList = ["All", "Memory", "Number Skills", "Pattern Recognition", "Attention & Focus", "Word Skills", "Image Recall", "Gentle Reaction"];
+
+  const filteredCategories =
+    selectedFilter === "All"
+      ? categories
+      : categories.filter((c) => c.name.toLowerCase().includes(selectedFilter.toLowerCase().split(" ")[0]));
+
   const openGame = (route: string) => {
-    window.location.href = route;
+    sounds.playClick();
+    navigate(route);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
-
+    <div className="min-h-screen bg-slate-50 pb-28 text-slate-800">
       {/* Header */}
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
-
-          <div className="flex items-center gap-3">
-
+      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
+          <div
+            onClick={() => navigate("/")}
+            className="flex cursor-pointer items-center gap-3 transition hover:opacity-90"
+          >
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-2xl">
               🧠
             </div>
-
             <div>
               <h1 className="text-xl font-bold text-blue-700 sm:text-2xl">
                 NeuroSathi
               </h1>
-
-              <p className="hidden text-sm text-slate-500 sm:block">
-                Choose an activity
+              <p className="hidden text-xs font-semibold text-slate-500 sm:block">
+                All 14 Senior Cognitive Games
               </p>
             </div>
-
           </div>
 
-          <button
-            onClick={() => (window.location.href = "/")}
-            className="flex min-h-12 items-center gap-2 rounded-xl border-2 border-slate-200 bg-white px-4 py-3 font-bold text-slate-700 transition hover:bg-slate-50"
-          >
-            <ArrowLeft size={20} />
+          <div className="flex items-center gap-2">
+            {onOpenDaily && (
+              <button
+                onClick={() => {
+                  sounds.playClick();
+                  onOpenDaily();
+                }}
+                className="hidden sm:flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-bold text-amber-900 hover:bg-amber-100 transition"
+              >
+                <span>🌟</span>
+                <span>Daily Workout</span>
+              </button>
+            )}
 
-            <span className="hidden sm:inline">
-              Home
-            </span>
-          </button>
+            {onOpenProgress && (
+              <button
+                onClick={() => {
+                  sounds.playClick();
+                  onOpenProgress();
+                }}
+                className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition"
+              >
+                <BarChart3 size={18} />
+                <span>My Progress</span>
+              </button>
+            )}
 
+            <button
+              onClick={() => {
+                sounds.playClick();
+                navigate("/");
+              }}
+              className="flex items-center gap-1.5 rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800 transition"
+            >
+              <ArrowLeft size={18} />
+              <span>Home</span>
+            </button>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8 lg:py-14">
-
-        {/* Page Introduction */}
+      <main className="mx-auto max-w-7xl px-5 py-8 sm:px-8 lg:py-12">
+        {/* Page Title & Intro */}
         <div className="max-w-3xl">
-
-          <p className="text-base font-bold uppercase tracking-wide text-blue-700">
-            14 Cognitive Activities
-          </p>
-
-          <h2 className="mt-3 text-4xl font-bold text-slate-900 sm:text-5xl">
-            Choose a Cognitive Activity
+          <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-1.5 text-sm font-bold text-blue-800 mb-3">
+            <Sparkles size={16} />
+            Complete Game Catalog
+          </div>
+          <h2 className="text-3xl font-black text-slate-900 sm:text-4xl lg:text-5xl">
+            Choose a Cognitive Game
           </h2>
-
-          <p className="mt-5 text-lg leading-8 text-slate-600">
-            Take your time and choose an activity that feels
-            comfortable. NeuroSathi will gradually adapt activities
-            to your performance.
+          <p className="mt-3 text-lg leading-relaxed text-slate-600">
+            Take your time and explore any game that interests you. Each game starts with gentle instructions and adapts to your comfort.
           </p>
-
         </div>
 
-        {/* Categories */}
-        <div className="mt-12 space-y-10">
+        {/* Filter Pills */}
+        <div className="mt-8 flex flex-wrap gap-2">
+          {filterList.map((f) => (
+            <button
+              key={f}
+              onClick={() => {
+                sounds.playClick();
+                setSelectedFilter(f);
+              }}
+              className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                selectedFilter === f
+                  ? "bg-blue-700 text-white shadow"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
 
-          {categories.map((category) => (
-
+        {/* Categories & Game Cards */}
+        <div className="mt-10 space-y-10">
+          {filteredCategories.map((category) => (
             <section
               key={category.name}
               className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
             >
-
-              {/* Category Header */}
-              <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-
-                <div className="flex items-start gap-4">
-
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-5">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
                     {category.icon}
                   </div>
-
                   <div>
-
-                    <h3 className="text-2xl font-bold text-slate-900">
-                      {category.name}
-                    </h3>
-
-                    <p className="mt-1 text-base leading-6 text-slate-600">
-                      {category.description}
-                    </p>
-
+                    <h3 className="text-2xl font-bold text-slate-900">{category.name}</h3>
+                    <p className="text-sm font-medium text-slate-500 mt-0.5">{category.description}</p>
                   </div>
-
                 </div>
-
-                <span className="w-fit rounded-full bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700">
-                  {category.games.length} games
+                <span className="w-fit rounded-full bg-blue-50 px-3.5 py-1 text-xs font-bold text-blue-700 border border-blue-200">
+                  {category.games.length} {category.games.length === 1 ? "Activity" : "Activities"}
                 </span>
-
               </div>
 
-              {/* Games */}
-              <div className="mt-7 grid gap-5 md:grid-cols-2">
-
+              <div className="mt-6 grid gap-5 md:grid-cols-2">
                 {category.games.map((game) => (
-
                   <div
                     key={game.name}
-                    className="group rounded-2xl border-2 border-slate-200 bg-slate-50 p-5 transition hover:border-blue-200 hover:bg-white hover:shadow-md"
+                    className="group flex flex-col justify-between rounded-2xl border-2 border-slate-200 bg-slate-50/70 p-5 transition-all hover:border-blue-300 hover:bg-white hover:shadow-lg"
                   >
-
                     <div className="flex items-start gap-4">
-
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-4xl shadow-sm">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-4xl shadow-sm border border-slate-200 group-hover:scale-105 transition-transform">
                         {game.icon}
                       </div>
-
                       <div className="min-w-0 flex-1">
-
-                        <h4 className="text-xl font-bold text-slate-900">
+                        <h4 className="text-xl font-bold text-slate-900 group-hover:text-blue-700 transition-colors">
                           {game.name}
                         </h4>
-
-                        <p className="mt-2 text-base leading-6 text-slate-600">
+                        <p className="mt-1.5 text-sm sm:text-base leading-relaxed text-slate-600">
                           {game.description}
                         </p>
-
                       </div>
-
                     </div>
 
                     <button
                       onClick={() => openGame(game.route)}
-                      className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-base font-bold text-white transition hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-200"
+                      className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-5 py-3 text-base font-bold text-white shadow transition hover:bg-blue-800 active:scale-98"
                     >
-                      Play Game
-                      <ArrowRight size={20} />
+                      <span>Play {game.name}</span>
+                      <ArrowRight size={18} />
                     </button>
-
                   </div>
-
                 ))}
-
               </div>
-
             </section>
-
           ))}
-
         </div>
 
-        {/* Encouragement */}
-        <div className="mt-10 rounded-3xl border border-blue-100 bg-blue-50 p-6 text-center sm:p-8">
-
-          <div className="text-4xl">
-            🌟
-          </div>
-
+        {/* Gentle Encouragement Banner */}
+        <div className="mt-12 rounded-3xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 p-6 sm:p-8 text-center">
+          <div className="text-4xl">🐕</div>
           <h3 className="mt-3 text-2xl font-bold text-slate-900">
-            Practice at Your Own Pace
+            Unsure Which Game to Try First?
           </h3>
-
-          <p className="mx-auto mt-3 max-w-2xl text-base leading-7 text-slate-600">
-            There is no need to rush. NeuroSathi adjusts activities
-            gradually based on your recent performance.
+          <p className="mx-auto mt-2 max-w-xl text-base text-slate-600">
+            Tap Sheru the companion dog in the bottom corner anytime! He can ask how you are feeling and choose the right game for you.
           </p>
-
         </div>
-
       </main>
 
       {/* Mobile Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-200 bg-white px-2 py-2 shadow-lg md:hidden">
-
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white px-2 py-2 shadow-lg md:hidden">
         <div className="mx-auto grid max-w-lg grid-cols-4">
-
           <button
-            onClick={() => (window.location.href = "/")}
+            onClick={() => {
+              sounds.playClick();
+              navigate("/");
+            }}
             className="flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-slate-600"
           >
-            <span className="text-xl">
-              🏠
-            </span>
-
-            <span className="text-xs font-semibold">
-              Home
-            </span>
+            <span className="text-xl">🏠</span>
+            <span className="text-xs font-semibold">Home</span>
           </button>
-
           <button
+            onClick={() => {
+              sounds.playClick();
+              navigate("/games");
+            }}
             className="flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-blue-700"
           >
-            <span className="text-xl">
-              🎮
-            </span>
-
-            <span className="text-xs font-semibold">
-              Games
-            </span>
+            <span className="text-xl">🎮</span>
+            <span className="text-xs font-bold">Games</span>
           </button>
-
           <button
+            onClick={() => {
+              sounds.playClick();
+              onOpenDaily?.();
+            }}
             className="flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-slate-600"
           >
-            <span className="text-xl">
-              🌟
-            </span>
-
-            <span className="text-xs font-semibold">
-              Daily
-            </span>
+            <span className="text-xl">🌟</span>
+            <span className="text-xs font-semibold">Daily</span>
           </button>
-
           <button
+            onClick={() => {
+              sounds.playClick();
+              onOpenProgress?.();
+            }}
             className="flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-slate-600"
           >
-            <span className="text-xl">
-              📊
-            </span>
-
-            <span className="text-xs font-semibold">
-              Progress
-            </span>
+            <span className="text-xl">📊</span>
+            <span className="text-xs font-semibold">Progress</span>
           </button>
-
         </div>
-
       </nav>
-
     </div>
   );
 }
-
-export default GamesPage;
