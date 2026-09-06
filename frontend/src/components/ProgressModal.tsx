@@ -22,7 +22,12 @@ interface ProgressData {
   }>;
 }
 
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL !== undefined
+    ? import.meta.env.VITE_BACKEND_URL
+    : typeof window !== "undefined" && window.location.port === "5173"
+    ? "http://localhost:3001"
+    : "";
 
 export default function ProgressModal({
   isOpen,

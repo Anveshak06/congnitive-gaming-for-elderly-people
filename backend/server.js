@@ -535,6 +535,16 @@ Respond ONLY in valid JSON with this exact structure:
   });
 });
 
+// Serve frontend static build in production (e.g., Render / Cloud)
+const frontendDist = path.join(__dirname, "../frontend/dist");
+if (fs.existsSync(frontendDist)) {
+  app.use(express.static(frontendDist));
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(frontendDist, "index.html"));
+  });
+}
+
 app.listen(PORT, () => {
   console.log(`🐾 NeuroSathi Backend running on http://localhost:${PORT}`);
 });
+

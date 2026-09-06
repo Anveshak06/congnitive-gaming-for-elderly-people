@@ -163,10 +163,17 @@ function getGameType(): GameType {
   return "card-matching";
 }
 
+const BACKEND_URL =
+  import.meta.env.VITE_BACKEND_URL !== undefined
+    ? import.meta.env.VITE_BACKEND_URL
+    : typeof window !== "undefined" && window.location.port === "5173"
+    ? "http://localhost:3001"
+    : "";
+
 // Record score to backend API
 async function recordScore(gameId: string, category: string, stars: number = 3) {
   try {
-    await fetch("http://localhost:3001/api/progress", {
+    await fetch(`${BACKEND_URL}/api/progress`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ gameId, category, stars, score: stars * 10 }),
